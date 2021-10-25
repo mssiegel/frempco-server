@@ -1,0 +1,30 @@
+{
+  "name": "frempco-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index",
+    "start": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mssiegel/frempco-server.git"
+  },
+  "author": "Moshe Siegel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mssiegel/frempco-server/issues"
+  },
+  "homepage": "https://github.com/mssiegel/frempco-server#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "helmet": "^4.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.1.0",
+    "nodemon": "^2.0.14",
+    "prettier": "^2.4.1"
+  }
+}
