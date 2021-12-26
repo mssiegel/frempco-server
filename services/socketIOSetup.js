@@ -31,10 +31,9 @@ export default function socketIOSetup(server) {
     });
 
     socket.on(
-      'notify teacher of new student',
-      ({ student: name, classroom: classroomName }) => {
-        const student = { name, socketId: socket.id };
-        addStudentToClassroom(student, classroomName);
+      'new student entered',
+      ({ student: studentName, classroom: classroomName }) => {
+        addStudentToClassroom(studentName, classroomName, socket);
       },
     );
   });

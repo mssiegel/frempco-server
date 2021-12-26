@@ -23,12 +23,14 @@ export function getTeacher(socketId) {
   return teachers[socketId];
 }
 
-export function addStudentToClassroom(student, classroomName) {
+export function addStudentToClassroom(studentName, classroomName, socket) {
   // add student
+  students[socket.id] = socket;
+  const student = { name: studentName, socketId: socket.id };
   const classroom = classrooms[classroomName];
   classroom.students.push(student);
 
   // inform teacher
   const teacherSocket = teachers[classroom.teacherSocketId].socket;
-  teacherSocket.emit('new student joined', student.name);
+  teacherSocket.emit('new student joined', student);
 }
