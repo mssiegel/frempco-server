@@ -7,6 +7,7 @@ import {
   deleteClassroom,
   getTeacher,
   addStudentToClassroom,
+  pairStudents,
 } from './database.js';
 
 export default function socketIOSetup(server) {
@@ -36,5 +37,9 @@ export default function socketIOSetup(server) {
         addStudentToClassroom(studentName, classroomName, socket);
       },
     );
+
+    socket.on('pair students', ({ studentPairs }) => {
+      pairStudents(studentPairs, socket);
+    });
   });
 }
