@@ -33,8 +33,8 @@ export default function socketIOSetup(server) {
 
     socket.on(
       'new student entered',
-      ({ student: studentName, classroom: classroomName }) => {
-        addStudentToClassroom(studentName, classroomName, socket);
+      ({ student: studentRealName, classroom: classroomName }) => {
+        addStudentToClassroom(studentRealName, classroomName, socket);
       },
     );
 

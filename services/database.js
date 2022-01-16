@@ -1,7 +1,7 @@
-export const classrooms = {}; // map classroomName => {teacherSocketId, students:[{name, socketId}]}
-export const teachers = {}; // map socket.id => {socket, classroomName}
-export const students = {}; // map socket.id => socket
-export const studentRooms = {}; // map student socket.id => room
+export const classrooms = {}; // map classroomName => {teacherSocketId, students:[{realName, socketId}]}
+export const teachers = {}; // map socket.id => {classroomName, socket}
+export const students = {}; // map socket.id => {classroomName, socket}
+export const rooms = {}; // map student socket.id => socketRoom
 
 export function getClassroom(classroomName) {
   return classrooms[classroomName];
@@ -24,10 +24,10 @@ export function getTeacher(socketId) {
   return teachers[socketId];
 }
 
-export function addStudentToClassroom(studentName, classroomName, socket) {
+export function addStudentToClassroom(studentRealName, classroomName, socket) {
   // add student
-  students[socket.id] = socket;
-  const student = { name: studentName, socketId: socket.id };
+  students[socket.id] = { socket, classroomName };
+  const student = { realName: studentRealName, socketId: socket.id };
   const classroom = classrooms[classroomName];
   classroom.students.push(student);
 
@@ -39,19 +39,29 @@ export function addStudentToClassroom(studentName, classroomName, socket) {
 export function pairStudents(studentPairs, teacherSocket) {
   console.log(studentPairs);
   for (const [student1, student2] of studentPairs) {
-    const room = student1.socketId + '#' + student2.socketId;
-    const student1Socket = students[student1.socketId];
-    const student2Socket = students[student2.socketId];
+    const socketRoom = student1.socketId + '#' + student2.socketId;
+    const student1Socket = students[student1.socketId].socket;
+    const student2Socket = students[student2.socketId].socket;
     // join them to a room
-    student1Socket.join(room);
-    student2Socket.join(room);
-    // register the room to their socket ids
-    studentRooms[student1.socketId] = room;
-    studentRooms[student2.socketId] = room;
+    student1Socket.join(socketRoom);
+    student2Socket.join(socketRoom);
+    // register the socket room to their socket ids
+    rooms[student1.socketId] = socketRoom;
+    rooms[student2.socketId] = socketRoom;
     // exchange names between the two students and start the chat
-    student1Socket.emit('chat start', { peersName: student2.name });
-    student2Socket.emit('chat start', { peersName: student1.name });
+    student1Socket.emit('chat start', {
+      yourCharacter: student1.character,
+      peersCharacter: student2.character,
+    });
+    student2Socket.emit('chat start', {
+      yourCharacter: student2.character,
+      peersCharacter: student1.character,
+    });
 
-    // TODO: implement a way for teacher to listen in on students' chat messages
+    // TODO: write an event listener on teacher's front end for this chat event
+    teacherSocket.emit('chat started - two students', {
+      socketRoom,
+      studentPair: [student1, student2],
+    });
   }
 }
