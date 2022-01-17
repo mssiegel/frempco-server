@@ -65,3 +65,8 @@ export function pairStudents(studentPairs, teacherSocket) {
     });
   }
 }
+
+export function sendMessage(character, message, socket) {
+  const room = rooms[socket.id];
+  socket.to(room).emit('chat message', { character, message });
+}

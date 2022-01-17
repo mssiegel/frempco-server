@@ -8,6 +8,7 @@ import {
   getTeacher,
   addStudentToClassroom,
   pairStudents,
+  sendMessage,
 } from './database.js';
 
 export default function socketIOSetup(server) {
@@ -38,8 +39,14 @@ export default function socketIOSetup(server) {
       },
     );
 
+    // Teacher pairs up their students
     socket.on('pair students', ({ studentPairs }) => {
       pairStudents(studentPairs, socket);
+    });
+
+    // New chat message sent from one student to their peer
+    socket.on('chat message', ({ character, message }) => {
+      sendMessage(character, message, socket);
     });
   });
 }
