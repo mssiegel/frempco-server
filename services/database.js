@@ -1,7 +1,7 @@
 export const classrooms = {}; // map classroomName => {teacherSocketId, students:[{realName, socketId}]}
 export const teachers = {}; // map socket.id => {classroomName, socket}
 export const students = {}; // map socket.id => {classroomName, socket}
-export const rooms = {}; // map student socket.id => socketRoom
+export const chatIds = {}; // map student socket.id => chatId
 
 export function getClassroom(classroomName) {
   return classrooms[classroomName];
@@ -39,15 +39,15 @@ export function addStudentToClassroom(studentRealName, classroomName, socket) {
 export function pairStudents(studentPairs, teacherSocket) {
   console.log(studentPairs);
   for (const [student1, student2] of studentPairs) {
-    const socketRoom = student1.socketId + '#' + student2.socketId;
+    const chatId = student1.socketId + '#' + student2.socketId;
     const student1Socket = students[student1.socketId].socket;
     const student2Socket = students[student2.socketId].socket;
-    // join them to a room
-    student1Socket.join(socketRoom);
-    student2Socket.join(socketRoom);
-    // register the socket room to their socket ids
-    rooms[student1.socketId] = socketRoom;
-    rooms[student2.socketId] = socketRoom;
+    // join them to a chat
+    student1Socket.join(chatId);
+    student2Socket.join(chatId);
+    // map their socket ids to the chat
+    chatIds[student1.socketId] = chatId;
+    chatIds[student2.socketId] = chatId;
     // exchange names between the two students and start the chat
     student1Socket.emit('chat start', {
       yourCharacter: student1.character,
@@ -58,15 +58,14 @@ export function pairStudents(studentPairs, teacherSocket) {
       peersCharacter: student1.character,
     });
 
-    // TODO: write an event listener on teacher's front end for this chat event
     teacherSocket.emit('chat started - two students', {
-      socketRoom,
+      chatId,
       studentPair: [student1, student2],
     });
   }
 }
 
 export function sendMessage(character, message, socket) {
-  const room = rooms[socket.id];
-  socket.to(room).emit('chat message', { character, message });
+  const chatId = chatIds[socket.id];
+  socket.to(chatId).emit('chat message', { character, message });
 }
