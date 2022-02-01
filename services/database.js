@@ -66,6 +66,14 @@ export function pairStudents(studentPairs, teacherSocket) {
 }
 
 export function sendMessage(character, message, socket) {
-  const chatId = chatIds[socket.id];
+  const socketId = socket.id;
+  const chatId = chatIds[socketId];
+  // send message to other student
   socket.to(chatId).emit('chat message', { character, message });
+  // send message to teacher
+  const classroomName = students[socketId].classroomName;
+  const teacherSocketId = classrooms[classroomName].teacherSocketId;
+  socket
+    .to(teacherSocketId)
+    .emit('student chat message', { character, message, socketId, chatId });
 }
