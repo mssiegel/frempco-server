@@ -6,7 +6,9 @@ import {
   addClassroom,
   deleteClassroom,
   getTeacher,
+  getStudent,
   addStudentToClassroom,
+  remStudentFromClassroom,
   pairStudents,
   sendMessage,
   sendUserTyping
@@ -22,7 +24,8 @@ export default function socketIOSetup(server) {
       const teacher = getTeacher(socket.id);
       if (teacher) deleteClassroom(teacher.classroomName, socket.id);
 
-      // TODO: Inform teacher if student disconnects
+      const student = getStudent(socket.id);
+      if (student) remStudentFromClassroom(student, socket)
     });
 
     socket.on('activate classroom', ({ classroomName }) => {
