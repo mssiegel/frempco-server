@@ -9,6 +9,7 @@ import {
   addStudentToClassroom,
   pairStudents,
   sendMessage,
+  sendUserTyping
 } from './database.js';
 
 export default function socketIOSetup(server) {
@@ -47,6 +48,11 @@ export default function socketIOSetup(server) {
     // New chat message sent from one student to their peer
     socket.on('chat message', ({ character, message }) => {
       sendMessage(character, message, socket);
+    });
+
+    // New chat message sent from one student to their peer
+    socket.on('student typing', ({ character, message }) => {
+      sendUserTyping(character, message, socket);
     });
   });
 }

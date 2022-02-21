@@ -77,3 +77,19 @@ export function sendMessage(character, message, socket) {
     .to(teacherSocketId)
     .emit('student chat message', { character, message, socketId, chatId });
 }
+
+export function sendUserTyping(character, message, socket) {
+  const socketId = socket.id;
+  const chatId = chatIds[socketId];
+  const student = students[socketId];
+  if (!student) return;
+  student.lastKnownCharacterName = character;
+  // send message to other student
+  socket.to(chatId).emit('peer is typing', { character, message });
+  // send message to teacher
+  const classroomName = students[socketId].classroomName;
+  const teacherSocketId = classrooms[classroomName].teacherSocketId;
+  socket
+    .to(teacherSocketId)
+    .emit('student is typing', { character, message, socketId, chatId });
+}
