@@ -49,11 +49,8 @@ export function remStudentFromClassroom(student, socket) {
   );
   classroom.students.splice(studentIndex, 1);
 
-  sendMessage(
-    student.lastKnownCharacterName,
-    '::::HAS LEFT THE CHAT::::',
-    socket,
-  );
+  const chatId = chatIds[socket.id];
+  socket.to(chatId).emit('peer has left chat', {});
 
   if (student.pairPartner) unPairStudents(student, teacherSocket);
 
@@ -77,10 +74,6 @@ export function pairStudents(studentPairs, teacherSocket) {
     // map their socket ids to the chat
     chatIds[student1.socketId] = chatId;
     chatIds[student2.socketId] = chatId;
-
-    // set last known character name
-    students[student1.socketId].lastKnownCharacterName = student1.character;
-    students[student2.socketId].lastKnownCharacterName = student2.character;
 
     // set pair partners so they can be later unpaired
     students[student1.socketId].pairPartner = student2;
@@ -131,9 +124,6 @@ export function unPairStudents(student, teacherSocket) {
   student1.pairPartner = null;
   student2.pairPartner = null;
 
-  student1.lastKnownCharacterName = null;
-  student2.lastKnownCharacterName = null;
-
   delete chatIds[student.socket.id];
   delete chatIds[otherStudent.socketId];
 }
@@ -141,8 +131,7 @@ export function unPairStudents(student, teacherSocket) {
 export function sendMessage(character, message, socket) {
   const socketId = socket.id;
   const chatId = chatIds[socketId];
-  const student = students[socketId];
-  student.lastKnownCharacterName = character;
+
   // send message to other student
   socket.to(chatId).emit('chat message', { character, message });
   // send message to teacher
