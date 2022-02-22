@@ -6,9 +6,12 @@ import {
   addClassroom,
   deleteClassroom,
   getTeacher,
+  getStudent,
   addStudentToClassroom,
+  remStudentFromClassroom,
   pairStudents,
   sendMessage,
+  sendUserTyping
 } from './database.js';
 
 export default function socketIOSetup(server) {
@@ -21,7 +24,8 @@ export default function socketIOSetup(server) {
       const teacher = getTeacher(socket.id);
       if (teacher) deleteClassroom(teacher.classroomName, socket.id);
 
-      // TODO: Inform teacher if student disconnects
+      const student = getStudent(socket.id);
+      if (student) remStudentFromClassroom(student, socket)
     });
 
     socket.on('activate classroom', ({ classroomName }) => {
@@ -47,6 +51,11 @@ export default function socketIOSetup(server) {
     // New chat message sent from one student to their peer
     socket.on('chat message', ({ character, message }) => {
       sendMessage(character, message, socket);
+    });
+
+    // New chat message sent from one student to their peer
+    socket.on('student typing', ({ character, message }) => {
+      sendUserTyping(character, message, socket);
     });
   });
 }
