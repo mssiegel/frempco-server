@@ -11,7 +11,7 @@ import {
   remStudentFromClassroom,
   pairStudents,
   sendMessage,
-  sendUserTyping
+  sendUserTyping,
 } from './database.js';
 
 export default function socketIOSetup(server) {
@@ -25,7 +25,7 @@ export default function socketIOSetup(server) {
       if (teacher) deleteClassroom(teacher.classroomName, socket.id);
 
       const student = getStudent(socket.id);
-      if (student) remStudentFromClassroom(student, socket)
+      if (student) remStudentFromClassroom(student, socket);
     });
 
     socket.on('activate classroom', ({ classroomName }) => {
@@ -54,8 +54,8 @@ export default function socketIOSetup(server) {
     });
 
     // New chat message sent from one student to their peer
-    socket.on('student typing', ({ character, message }) => {
-      sendUserTyping(character, message, socket);
+    socket.on('student typing', ({ character }) => {
+      sendUserTyping(character, socket);
     });
   });
 }
