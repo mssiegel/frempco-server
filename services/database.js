@@ -142,8 +142,7 @@ export function sendMessage(character, message, socket) {
     .emit('student chat message', { character, message, socketId, chatId });
 }
 
-export function sendUserTyping(character, message, socket) {
-  const socketId = socket.id;
-  const chatId = chatIds[socketId];
-  socket.to(chatId).emit('peer is typing', { character, message });
+export function sendUserTyping(character, socket) {
+  const chatId = chatIds[socket.id];
+  socket.to(chatId).emit('peer is typing', { character });
 }
