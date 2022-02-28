@@ -1,6 +1,6 @@
-export const classrooms = {}; // map classroomName => {teacherSocketId, students:[{realName, socketId}]}
-export const teachers = {}; // map socket.id => {classroomName, socket}
-export const students = {}; // map socket.id => {classroomName, socket}
+export const classrooms = {}; // map classroomName => {teacherSocketId, students:[socketId]}
+export const teachers = {}; // map socket.id => {socket, classroomName, }
+export const students = {}; // map socket.id => {socket, classroomName, realName, peerSocketId}
 export const chatIds = {}; // map student socket.id => chatId
 
 export function getClassroom(classroomName) {
@@ -15,9 +15,9 @@ export function addClassroom(classroomName, socket) {
   };
 }
 
-export function deleteClassroom(classroomName, teacherSocketId) {
-  delete classrooms[classroomName];
-  delete teachers[teacherSocketId];
+export function deleteClassroom(teacher) {
+  delete classrooms[teacher.classroomName];
+  delete teachers[teacher.socket.id];
 }
 
 export function getTeacher(socketId) {
@@ -28,104 +28,108 @@ export function getStudent(socketId) {
   return students[socketId];
 }
 
-export function addStudentToClassroom(studentRealName, classroomName, socket) {
-  // add student
-  students[socket.id] = { socket, classroomName, studentRealName };
-  const student = { realName: studentRealName, socketId: socket.id };
-  const classroom = classrooms[classroomName];
-  classroom.students.push(student);
+export function addStudentToClassroom(realName, classroomName, socket) {
+  students[socket.id] = {
+    socket,
+    classroomName,
+    realName,
+    peerSocketId: null,
+  };
+
+  const classroom = getClassroom(classroomName);
+  classroom.students.push(socket.id);
 
   // inform teacher
   const teacherSocket = teachers[classroom.teacherSocketId].socket;
-  teacherSocket.emit('new student joined', student);
+  teacherSocket.emit('new student joined', { realName, socketId: socket.id });
 }
 
-export function remStudentFromClassroom(student, socket) {
+export function remStudentFromClassroom(student) {
   const classroomName = student.classroomName;
-  const classroom = classrooms[classroomName];
-  const teacherSocket = teachers[classroom.teacherSocketId].socket;
-  const studentIndex = classroom.students.findIndex(
-    (s) => s.socketId === socket.id,
-  );
-  classroom.students.splice(studentIndex, 1);
+  const classroom = getClassroom(classroomName);
 
-  const chatId = chatIds[socket.id];
-  socket.to(chatId).emit('peer has left chat', {});
+  let teacherSocket = null;
+  // a classroom won't exist if the teacher already left
+  if (classroom) {
+    classroom.students = classroom.students.filter(
+      (s) => s.socketId !== student.socket.id,
+    );
 
-  if (student.pairPartner) unPairStudents(student, teacherSocket);
+    const teacher = getTeacher(classroom.teacherSocketId);
+    teacherSocket = teacher.socket;
 
-  teacherSocket.emit('student left', {
-    realName: student.studentRealName,
-    socketId: student.socket.id,
-  });
+    // notify teacher if the student was unpaired
+    if (!student.peerSocketId) {
+      teacherSocket.emit('unpaired student left', {
+        socketId: student.socket.id,
+      });
+    }
+  }
+  if (student.peerSocketId) unpairStudents(student, teacherSocket);
 
   delete students[student];
 }
 
 export function pairStudents(studentPairs, teacherSocket) {
-  console.log(studentPairs);
-  for (const [student1, student2] of studentPairs) {
-    const chatId = student1.socketId + '#' + student2.socketId;
-    const student1Socket = students[student1.socketId].socket;
-    const student2Socket = students[student2.socketId].socket;
-    // join them to a chat
-    student1Socket.join(chatId);
-    student2Socket.join(chatId);
-    // map their socket ids to the chat
-    chatIds[student1.socketId] = chatId;
-    chatIds[student2.socketId] = chatId;
+  for (const [tempStudent1, tempStudent2] of studentPairs) {
+    const student1 = getStudent(tempStudent1.socketId);
+    const student2 = getStudent(tempStudent2.socketId);
+    const chatId = student1.socket.id + '#' + student2.socket.id;
 
-    // set pair partners so they can be later unpaired
-    students[student1.socketId].pairPartner = student2;
-    students[student2.socketId].pairPartner = student1;
+    // join them to a chat
+    student1.socket.join(chatId);
+    student2.socket.join(chatId);
+    // map their socket ids to the chat
+    chatIds[student1.socket.id] = chatId;
+    chatIds[student2.socket.id] = chatId;
+
+    // set peer ids so they can be later unpaired
+    students[student1.socket.id].peerSocketId = student2.socket.id;
+    students[student2.socket.id].peerSocketId = student1.socket.id;
 
     // exchange names between the two students and start the chat
-    student1Socket.emit('chat start', {
-      yourCharacter: student1.character,
-      peersCharacter: student2.character,
+    student1.socket.emit('chat start', {
+      yourCharacter: tempStudent1.character,
+      peersCharacter: tempStudent2.character,
     });
-    student2Socket.emit('chat start', {
-      yourCharacter: student2.character,
-      peersCharacter: student1.character,
+    student2.socket.emit('chat start', {
+      yourCharacter: tempStudent2.character,
+      peersCharacter: tempStudent1.character,
     });
 
     teacherSocket.emit('chat started - two students', {
       chatId,
-      studentPair: [student1, student2],
+      studentPair: [tempStudent1, tempStudent2],
     });
   }
 }
 
-export function unPairStudents(student, teacherSocket) {
-  const otherStudent = student.pairPartner;
-
-  const student1 = student;
-  const student2 = getStudent(otherStudent.socketId);
-
-  // inform teacher
+function unpairStudents(student, teacherSocket) {
+  const student2 = getStudent(student.peerSocketId);
   const chatId = chatIds[student.socket.id];
 
-  teacherSocket.emit('chat ended - two students', {
-    chatId,
-    student1: {
-      realName: student.studentRealName,
-      socketId: student.socket.id,
-    },
-    student2: otherStudent,
-  });
+  // a teacher socket won't exist if the teacher already left
+  if (teacherSocket) {
+    teacherSocket.emit('chat ended - two students', {
+      chatId,
+      student2: {
+        realName: student2.realName,
+        socketId: student2.socket.id,
+      },
+    });
+  }
 
-  const student1Socket = students[student.socket.id].socket;
-  const student2Socket = students[otherStudent.socketId].socket;
+  student.socket.to(chatId).emit('peer left chat', {});
 
   // remove both students from their chat
-  student1Socket.leave(chatId);
-  student2Socket.leave(chatId);
+  student.socket.leave(chatId);
+  student2.socket.leave(chatId);
 
-  student1.pairPartner = null;
-  student2.pairPartner = null;
+  student.peerSocketId = null;
+  student2.peerSocketId = null;
 
   delete chatIds[student.socket.id];
-  delete chatIds[otherStudent.socketId];
+  delete chatIds[student2.socketId];
 }
 
 export function sendMessage(character, message, socket) {
@@ -136,10 +140,13 @@ export function sendMessage(character, message, socket) {
   socket.to(chatId).emit('chat message', { character, message });
   // send message to teacher
   const classroomName = students[socketId].classroomName;
-  const teacherSocketId = classrooms[classroomName].teacherSocketId;
-  socket
-    .to(teacherSocketId)
-    .emit('student chat message', { character, message, socketId, chatId });
+  const classroom = getClassroom(classroomName);
+  // a classroom won't exist if the teacher already left
+  if (classroom) {
+    socket
+      .to(classroom.teacherSocketId)
+      .emit('student chat message', { character, message, socketId, chatId });
+  }
 }
 
 export function sendUserTyping(character, socket) {
