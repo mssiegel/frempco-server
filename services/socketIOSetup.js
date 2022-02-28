@@ -22,10 +22,10 @@ export default function socketIOSetup(server) {
   io.on('connect', (socket) => {
     socket.on('disconnect', () => {
       const teacher = getTeacher(socket.id);
-      if (teacher) deleteClassroom(teacher.classroomName, socket.id);
+      if (teacher) deleteClassroom(teacher);
 
       const student = getStudent(socket.id);
-      if (student) remStudentFromClassroom(student, socket);
+      if (student) remStudentFromClassroom(student);
     });
 
     socket.on('activate classroom', ({ classroomName }) => {
@@ -38,8 +38,8 @@ export default function socketIOSetup(server) {
 
     socket.on(
       'new student entered',
-      ({ student: studentRealName, classroom: classroomName }) => {
-        addStudentToClassroom(studentRealName, classroomName, socket);
+      ({ student: realName, classroom: classroomName }) => {
+        addStudentToClassroom(realName, classroomName, socket);
       },
     );
 
