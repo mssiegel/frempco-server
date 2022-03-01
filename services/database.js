@@ -16,6 +16,14 @@ export function addClassroom(classroomName, socket) {
 }
 
 export function deleteClassroom(teacher) {
+  const className = teacher.classroomName
+  if (!className) return;
+  Object.keys(students).forEach((socketId) => {
+    const student = getStudent(socketId);
+    if (student.classroomName === className) {
+      student.socket.emit("teacher left")
+    }
+  })
   delete classrooms[teacher.classroomName];
   delete teachers[teacher.socket.id];
 }
