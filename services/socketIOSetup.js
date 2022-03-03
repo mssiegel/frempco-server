@@ -20,20 +20,23 @@ export default function socketIOSetup(server) {
   });
 
   io.on('connect', (socket) => {
-    socket.on('disconnect', () => {
+    const userDisconnected = () => {
       const teacher = getTeacher(socket.id);
       if (teacher) deleteClassroom(teacher);
 
       const student = getStudent(socket.id);
       if (student) remStudentFromClassroom(student);
-    });
+    }
+    socket.on('disconnect', userDisconnected);
+    socket.on('user disconnected', userDisconnected);
 
     socket.on('activate classroom', ({ classroomName }) => {
       addClassroom(classroomName, socket);
     });
 
-    socket.on('deactivate classroom', ({ classroomName }) => {
-      deleteClassroom(classroomName, socket.id);
+    socket.on('deactivate classroom', () => {
+      const teacher = getTeacher(socket.id);
+      if (teacher) deleteClassroom(teacher);
     });
 
     socket.on(
