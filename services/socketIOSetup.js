@@ -53,7 +53,10 @@ export default function socketIOSetup(server) {
 
     socket.on('remove student from classroom', ({ socketId }) => {
       const student = getStudent(socketId);
-      student.socket.emit('remove student from classroom')
+      if (student) {
+        remStudentFromClassroom(student);
+        student.socket.emit('remove student from classroom')
+      }
     });
 
     // New chat message sent from one student to their peer
