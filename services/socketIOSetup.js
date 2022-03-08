@@ -9,6 +9,7 @@ import {
   getStudent,
   addStudentToClassroom,
   remStudentFromClassroom,
+  unPairStudentChat,
   pairStudents,
   sendMessage,
   sendUserTyping,
@@ -49,6 +50,11 @@ export default function socketIOSetup(server) {
     // Teacher pairs up their students
     socket.on('pair students', ({ studentPairs }) => {
       pairStudents(studentPairs, socket);
+    });
+
+    socket.on('unpair student chat', ({ chatId, student1, student2 }) => {
+      const teacher = getTeacher(socket.id);
+      unPairStudentChat(teacher.socket, chatId, student1, student2)
     });
 
     // New chat message sent from one student to their peer

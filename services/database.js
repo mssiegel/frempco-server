@@ -132,6 +132,32 @@ function unpairStudents(student, teacherSocket) {
   delete chatIds[student2.socketId];
 }
 
+export function unPairStudentChat(teacherSocket, chatId, student1, student2) {
+
+  const stud1 = getStudent(student1.socketId)
+  const stud2 = getStudent(student2.socketId)
+
+  stud1 && stud1.socket.to(chatId).emit('peer left chat', {});
+  stud2 && stud2.socket.to(chatId).emit('peer left chat', {});
+
+  // remove both students from their chat
+  stud1 && stud1.socket.leave(chatId);
+  stud2 && stud2.socket.leave(chatId);
+
+  stud1 && (stud1.peerSocketId = null);
+  stud2 && (stud2.peerSocketId = null);
+
+  stud1 && delete chatIds[stud1.socket.id];
+  stud2 && delete chatIds[stud2.socket.id];
+
+  // a teacher socket won't exist if the teacher already left
+  if (teacherSocket) {
+    teacherSocket.emit('student chat unpaired', {
+      chatId, student1, student2
+    });
+  }
+}
+
 export function sendMessage(character, message, socket) {
   const socketId = socket.id;
   const chatId = chatIds[socketId];
