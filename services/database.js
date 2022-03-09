@@ -132,7 +132,7 @@ function unpairStudents(student, teacherSocket) {
   delete chatIds[student2.socketId];
 }
 
-export function unPairStudentChat(teacherSocket, chatId, student1, student2) {
+export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
 
   const stud1 = getStudent(student1.socketId)
   const stud2 = getStudent(student2.socketId)
