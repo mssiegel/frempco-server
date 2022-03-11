@@ -5,8 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index",
-    "start": "node index"
+    "dev": "nodemon -e ts --exec \"npm run dev:build\"",
+    "start": "node build/index",
+    "build": "tsc",
+    "dev:build": "tsc && node build/index"
   },
   "author": "Moshe Siegel",
   "dependencies": {
