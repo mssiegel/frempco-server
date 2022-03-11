@@ -52,6 +52,14 @@ export default function socketIOSetup(server) {
       pairStudents(studentPairs, socket);
     });
 
+    socket.on('remove student from classroom', ({ socketId }) => {
+      const student = getStudent(socketId);
+      if (student) {
+        remStudentFromClassroom(student);
+        student.socket.emit('remove student from classroom')
+      }
+    });
+
     socket.on('unpair student chat', ({ chatId, student1, student2 }) => {
       const teacher = getTeacher(socket.id);
       unpairStudentChat(teacher.socket, chatId, student1, student2)
