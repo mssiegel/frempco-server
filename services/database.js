@@ -8,6 +8,8 @@ export function getClassroom(classroomName) {
 }
 
 export function addClassroom(classroomName, socket) {
+  // check to make sure we do not overwrite a class in session
+  if (classrooms[classroomName]) return;
   teachers[socket.id] = { socket, classroomName };
   classrooms[classroomName] = {
     teacherSocketId: socket.id,
@@ -16,6 +18,8 @@ export function addClassroom(classroomName, socket) {
 }
 
 export function deleteClassroom(teacher) {
+  // only the teacher that created the class should be allowed to delete
+  if (classrooms[teacher.classroomName].teacherSocketId != teacher.socket.id) return;
   delete classrooms[teacher.classroomName];
   delete teachers[teacher.socket.id];
 }
@@ -37,6 +41,8 @@ export function addStudentToClassroom(realName, classroomName, socket) {
   };
 
   const classroom = getClassroom(classroomName);
+  // double check student has not already joined classroom
+  if (classroom.students.includes(socket.id)) return;
   classroom.students.push(socket.id);
 
   // inform teacher
