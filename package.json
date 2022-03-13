@@ -8,7 +8,8 @@
     "dev": "nodemon -e ts --exec \"npm run dev:build\"",
     "start": "node build/index",
     "build": "tsc",
-    "dev:build": "tsc && node build/index"
+    "dev:build": "tsc && node build/index",
+    "postinstall": "tsc"
   },
   "author": "Moshe Siegel",
   "dependencies": {
