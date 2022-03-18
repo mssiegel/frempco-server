@@ -6,6 +6,8 @@ import { createServer } from 'http';
 import corsOptions from './services/corsOptions.js';
 import socketIOSetup from './services/socketIOSetup.js';
 import classroomRoutes from './routes/classrooms.js';
+import { getStudent, getClassroom } from './services/database.js';
+import { RESERVED_EVENTS } from 'socket.io/dist/socket';
 
 const app = express();
 
@@ -19,6 +21,19 @@ socketIOSetup(server);
 const port = process.env.PORT || 4000;
 
 app.use('/api/v1/classrooms', classroomRoutes);
+
+app.get('/api/v1/student/:studentId', (req, res) => {
+  const { studentId } = req.params;
+  const student = getStudent(studentId);
+  const classroom = getClassroom(student?.classroomName);
+  const isActive = student !== undefined && classroom !== undefined;
+  if (!isActive) return res.status(200).json({ isActive });
+  res.status(200).json({
+    student: student.realName || null,
+    classroom: student.classroomName || null,
+    isActive,
+  });
+});
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
