@@ -168,6 +168,8 @@ export function sendMessage(character, message, socket) {
   const socketId = socket.id;
   const chatId = chatIds[socketId];
 
+  throw new Error('hello i am an error');
+
   // send message to other student
   socket.to(chatId).emit('chat message', { character, message });
   // send message to teacher

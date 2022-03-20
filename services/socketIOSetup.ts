@@ -66,13 +66,26 @@ export default function socketIOSetup(server) {
     });
 
     // New chat message sent from one student to their peer
-    socket.on('chat message', ({ character, message }) => {
-      sendMessage(character, message, socket);
-    });
+    socket.on(
+      'chat message',
+      errorCatcher(({ character, message }) => {
+        sendMessage(character, message, socket);
+      }),
+    );
 
     // New chat message sent from one student to their peer
     socket.on('student typing', ({ character }) => {
       sendUserTyping(character, socket);
     });
   });
+}
+
+function errorCatcher(originalFunction) {
+  return (...args) => {
+    try {
+      originalFunction(...args);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 }
