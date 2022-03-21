@@ -1,7 +1,6 @@
 import { Server } from 'socket.io';
 
 import corsOptions from './corsOptions.js';
-import errorCatcher from '../utils/errorCatcher.js';
 import {
   addClassroom,
   deleteClassroom,
@@ -96,4 +95,15 @@ export default function socketIOSetup(server) {
       }),
     );
   });
+}
+
+function errorCatcher(originalFunction) {
+  // Prevents the server from crashing when the function throws an error
+  return (...args) => {
+    try {
+      originalFunction(...args);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 }
