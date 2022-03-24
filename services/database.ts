@@ -8,8 +8,6 @@ export function getClassroom(classroomName) {
 }
 
 export function addClassroom(classroomName, socket) {
-  // check to make sure we do not overwrite a class in session
-  if (classrooms[classroomName]) return;
   teachers[socket.id] = { socket, classroomName };
   classrooms[classroomName] = {
     teacherSocketId: socket.id,
@@ -18,8 +16,6 @@ export function addClassroom(classroomName, socket) {
 }
 
 export function deleteClassroom(teacher) {
-  // only the teacher that created the class should be allowed to delete
-  if (classrooms[teacher.classroomName].teacherSocketId != teacher.socket.id) return;
   delete classrooms[teacher.classroomName];
   delete teachers[teacher.socket.id];
 }
@@ -139,9 +135,8 @@ function unpairStudents(student, teacherSocket) {
 }
 
 export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
-
-  const stud1 = getStudent(student1.socketId)
-  const stud2 = getStudent(student2.socketId)
+  const stud1 = getStudent(student1.socketId);
+  const stud2 = getStudent(student2.socketId);
 
   stud1 && stud1.socket.to(chatId).emit('peer left chat', {});
   stud2 && stud2.socket.to(chatId).emit('peer left chat', {});
@@ -159,7 +154,9 @@ export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
   // a teacher socket won't exist if the teacher already left
   if (teacherSocket) {
     teacherSocket.emit('student chat unpaired', {
-      chatId, student1, student2
+      chatId,
+      student1,
+      student2,
     });
   }
 }
