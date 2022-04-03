@@ -69,7 +69,7 @@ export function remStudentFromClassroom(student) {
   }
   if (student.peerSocketId) unpairStudents(student, teacherSocket);
 
-  delete students[student];
+  delete students[student.socket.id];
 }
 
 export function pairStudents(studentPairs, teacherSocket) {
