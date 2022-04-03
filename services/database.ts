@@ -54,7 +54,7 @@ export function remStudentFromClassroom(student) {
   // a classroom won't exist if the teacher already left
   if (classroom) {
     classroom.students = classroom.students.filter(
-      (s) => s.socketId !== student.socket.id,
+      (socketId) => socketId !== student.socket.id,
     );
 
     const teacher = getTeacher(classroom.teacherSocketId);
