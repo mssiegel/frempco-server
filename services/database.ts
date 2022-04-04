@@ -54,7 +54,7 @@ export function remStudentFromClassroom(student) {
   // a classroom won't exist if the teacher already left
   if (classroom) {
     classroom.students = classroom.students.filter(
-      (s) => s.socketId !== student.socket.id,
+      (socketId) => socketId !== student.socket.id,
     );
 
     const teacher = getTeacher(classroom.teacherSocketId);
@@ -69,7 +69,7 @@ export function remStudentFromClassroom(student) {
   }
   if (student.peerSocketId) unpairStudents(student, teacherSocket);
 
-  delete students[student];
+  delete students[student.socket.id];
 }
 
 export function pairStudents(studentPairs, teacherSocket) {
@@ -131,7 +131,7 @@ function unpairStudents(student, teacherSocket) {
   student2.peerSocketId = null;
 
   delete chatIds[student.socket.id];
-  delete chatIds[student2.socketId];
+  delete chatIds[student2.socket.id];
 }
 
 export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
