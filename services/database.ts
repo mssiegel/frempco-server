@@ -131,7 +131,7 @@ function unpairStudents(student, teacherSocket) {
   student2.peerSocketId = null;
 
   delete chatIds[student.socket.id];
-  delete chatIds[student2.socketId];
+  delete chatIds[student2.socket.id];
 }
 
 export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
