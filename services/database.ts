@@ -1,13 +1,15 @@
+import { Socket } from 'socket.io';
+
 export const classrooms = {}; // map classroomName => {teacherSocketId, students:[socketId]}
 export const teachers = {}; // map socket.id => {socket, classroomName, }
 export const students = {}; // map socket.id => {socket, classroomName, realName, peerSocketId}
 export const chatIds = {}; // map student socket.id => chatId
 
-export function getClassroom(classroomName) {
+export function getClassroom(classroomName: string) {
   return classrooms[classroomName];
 }
 
-export function addClassroom(classroomName, socket) {
+export function addClassroom(classroomName: string, socket: Socket) {
   teachers[socket.id] = { socket, classroomName };
   classrooms[classroomName] = {
     teacherSocketId: socket.id,
@@ -20,15 +22,19 @@ export function deleteClassroom(teacher) {
   delete teachers[teacher.socket.id];
 }
 
-export function getTeacher(socketId) {
+export function getTeacher(socketId: string) {
   return teachers[socketId];
 }
 
-export function getStudent(socketId) {
+export function getStudent(socketId: string) {
   return students[socketId];
 }
 
-export function addStudentToClassroom(realName, classroomName, socket) {
+export function addStudentToClassroom(
+  realName: string,
+  classroomName: string,
+  socket: Socket,
+) {
   students[socket.id] = {
     socket,
     classroomName,
@@ -72,7 +78,7 @@ export function remStudentFromClassroom(student) {
   delete students[student.socket.id];
 }
 
-export function pairStudents(studentPairs, teacherSocket) {
+export function pairStudents(studentPairs, teacherSocket: Socket) {
   for (const [tempStudent1, tempStudent2] of studentPairs) {
     const student1 = getStudent(tempStudent1.socketId);
     const student2 = getStudent(tempStudent2.socketId);
@@ -106,7 +112,7 @@ export function pairStudents(studentPairs, teacherSocket) {
   }
 }
 
-function unpairStudents(student, teacherSocket) {
+function unpairStudents(student, teacherSocket: Socket) {
   const student2 = getStudent(student.peerSocketId);
   const chatId = chatIds[student.socket.id];
 
@@ -134,7 +140,12 @@ function unpairStudents(student, teacherSocket) {
   delete chatIds[student2.socket.id];
 }
 
-export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
+export function unpairStudentChat(
+  teacherSocket: Socket,
+  chatId: string,
+  student1,
+  student2,
+) {
   const stud1 = getStudent(student1.socketId);
   const stud2 = getStudent(student2.socketId);
 
@@ -161,7 +172,11 @@ export function unpairStudentChat(teacherSocket, chatId, student1, student2) {
   }
 }
 
-export function sendMessage(character, message, socket) {
+export function sendMessage(
+  character: string,
+  message: string,
+  socket: Socket,
+) {
   const socketId = socket.id;
   const chatId = chatIds[socketId];
 
@@ -178,7 +193,7 @@ export function sendMessage(character, message, socket) {
   }
 }
 
-export function sendUserTyping(character, socket) {
+export function sendUserTyping(character: string, socket: Socket) {
   const chatId = chatIds[socket.id];
   socket.to(chatId).emit('peer is typing', { character });
 }
