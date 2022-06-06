@@ -73,7 +73,19 @@ export function remStudentFromClassroom(student) {
       });
     }
   }
-  if (student.peerSocketId) unpairStudents(student, teacherSocket);
+  if (student.peerSocketId) {
+    const stud1 = { ...student, socketId: student.socket.id };
+    let stud2 = getStudent(student.peerSocketId);
+    stud2 = { ...stud2, socketId: stud2.socket.id };
+
+    unpairStudentChat(
+      teacherSocket,
+      chatIds[student.socket.id],
+      stud1,
+      stud2,
+      true,
+    );
+  }
 
   delete students[student.socket.id];
 }
@@ -112,39 +124,12 @@ export function pairStudents(studentPairs, teacherSocket: Socket) {
   }
 }
 
-function unpairStudents(student, teacherSocket: Socket) {
-  const student2 = getStudent(student.peerSocketId);
-  const chatId = chatIds[student.socket.id];
-
-  // a teacher socket won't exist if the teacher already left
-  if (teacherSocket) {
-    teacherSocket.emit('chat ended - two students', {
-      chatId,
-      student2: {
-        realName: student2.realName,
-        socketId: student2.socket.id,
-      },
-    });
-  }
-
-  student.socket.to(chatId).emit('peer left chat', {});
-
-  // remove both students from their chat
-  student.socket.leave(chatId);
-  student2.socket.leave(chatId);
-
-  student.peerSocketId = null;
-  student2.peerSocketId = null;
-
-  delete chatIds[student.socket.id];
-  delete chatIds[student2.socket.id];
-}
-
 export function unpairStudentChat(
   teacherSocket: Socket,
   chatId: string,
   student1,
   student2,
+  removeStud1?,
 ) {
   const stud1 = getStudent(student1.socketId);
   const stud2 = getStudent(student2.socketId);
@@ -164,11 +149,21 @@ export function unpairStudentChat(
 
   // a teacher socket won't exist if the teacher already left
   if (teacherSocket) {
-    teacherSocket.emit('student chat unpaired', {
-      chatId,
-      student1,
-      student2,
-    });
+    if (removeStud1) {
+      teacherSocket.emit('chat ended - two students', {
+        chatId,
+        student2: {
+          realName: student2.realName,
+          socketId: student2.socket.id,
+        },
+      });
+    } else {
+      teacherSocket.emit('student chat unpaired', {
+        chatId,
+        student1,
+        student2,
+      });
+    }
   }
 }
 
