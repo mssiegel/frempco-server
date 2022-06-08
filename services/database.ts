@@ -73,7 +73,26 @@ export function remStudentFromClassroom(student) {
       });
     }
   }
-  if (student.peerSocketId) unpairStudents(student, teacherSocket);
+
+  if (student.peerSocketId) {
+    const chatId = chatIds[student.socket.id];
+    student.socket.to(chatId).emit('peer left chat', {});
+    const student2 = getStudent(student.peerSocketId);
+
+    deleteChat(chatId, student, student2);
+
+    // a teacher socket won't exist if the teacher already left
+    if (teacherSocket) {
+      // informs teacher that chat ended but student2 remains in the classroom
+      teacherSocket.emit('chat ended - two students', {
+        chatId,
+        student2: {
+          realName: student2.realName,
+          socketId: student2.socket.id,
+        },
+      });
+    }
+  }
 
   delete students[student.socket.id];
 }
@@ -112,31 +131,14 @@ export function pairStudents(studentPairs, teacherSocket: Socket) {
   }
 }
 
-function unpairStudents(student, teacherSocket: Socket) {
-  const student2 = getStudent(student.peerSocketId);
-  const chatId = chatIds[student.socket.id];
-
-  // a teacher socket won't exist if the teacher already left
-  if (teacherSocket) {
-    teacherSocket.emit('chat ended - two students', {
-      chatId,
-      student2: {
-        realName: student2.realName,
-        socketId: student2.socket.id,
-      },
-    });
-  }
-
-  student.socket.to(chatId).emit('peer left chat', {});
-
-  // remove both students from their chat
-  student.socket.leave(chatId);
+function deleteChat(chatId: string, student1, student2) {
+  student1.socket.leave(chatId);
   student2.socket.leave(chatId);
 
-  student.peerSocketId = null;
+  student1.peerSocketId = null;
   student2.peerSocketId = null;
 
-  delete chatIds[student.socket.id];
+  delete chatIds[student1.socket.id];
   delete chatIds[student2.socket.id];
 }
 
@@ -149,18 +151,10 @@ export function unpairStudentChat(
   const stud1 = getStudent(student1.socketId);
   const stud2 = getStudent(student2.socketId);
 
-  stud1 && stud1.socket.to(chatId).emit('peer left chat', {});
-  stud2 && stud2.socket.to(chatId).emit('peer left chat', {});
+  stud1.socket.to(chatId).emit('peer left chat', {});
+  stud2.socket.to(chatId).emit('peer left chat', {});
 
-  // remove both students from their chat
-  stud1 && stud1.socket.leave(chatId);
-  stud2 && stud2.socket.leave(chatId);
-
-  stud1 && (stud1.peerSocketId = null);
-  stud2 && (stud2.peerSocketId = null);
-
-  stud1 && delete chatIds[stud1.socket.id];
-  stud2 && delete chatIds[stud2.socket.id];
+  deleteChat(chatId, stud1, stud2);
 
   // a teacher socket won't exist if the teacher already left
   if (teacherSocket) {
