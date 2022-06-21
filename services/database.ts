@@ -1,11 +1,11 @@
 import { Socket } from 'socket.io';
 
-import { Classrooms } from '../types';
+import { Classrooms, Teachers, Students, ChatIds } from './types';
 
-export const classrooms: Classrooms = {}; // map classroomName => {teacherSocketId, students:[socketId]}
-export const teachers = {}; // map socket.id => {socket, classroomName, }
-export const students = {}; // map socket.id => {socket, classroomName, realName, peerSocketId}
-export const chatIds = {}; // map student socket.id => chatId
+export const classrooms: Classrooms = {};
+export const teachers: Teachers = {};
+export const students: Students = {};
+export const chatIds: ChatIds = {};
 
 export function getClassroom(classroomName: string) {
   return classrooms[classroomName];
