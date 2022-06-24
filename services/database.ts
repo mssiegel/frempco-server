@@ -1,9 +1,18 @@
 import { Socket } from 'socket.io';
 
-export const classrooms = {}; // map classroomName => {teacherSocketId, students:[socketId]}
-export const teachers = {}; // map socket.id => {socket, classroomName, }
-export const students = {}; // map socket.id => {socket, classroomName, realName, peerSocketId}
-export const chatIds = {}; // map student socket.id => chatId
+import {
+  Classrooms,
+  Teachers,
+  Students,
+  Student,
+  ChatIds,
+  ChatId,
+} from './types';
+
+export const classrooms: Classrooms = {};
+export const teachers: Teachers = {};
+export const students: Students = {};
+export const chatIds: ChatIds = {};
 
 export function getClassroom(classroomName: string) {
   return classrooms[classroomName];
@@ -52,7 +61,7 @@ export function addStudentToClassroom(
   teacherSocket.emit('new student joined', { realName, socketId: socket.id });
 }
 
-export function remStudentFromClassroom(student) {
+export function remStudentFromClassroom(student: Student) {
   const classroomName = student.classroomName;
   const classroom = getClassroom(classroomName);
 
@@ -101,7 +110,7 @@ export function pairStudents(studentPairs, teacherSocket: Socket) {
   for (const [tempStudent1, tempStudent2] of studentPairs) {
     const student1 = getStudent(tempStudent1.socketId);
     const student2 = getStudent(tempStudent2.socketId);
-    const chatId = student1.socket.id + '#' + student2.socket.id;
+    const chatId = `${student1.socket.id}#${student2.socket.id}` as ChatId;
 
     // join them to a chat
     student1.socket.join(chatId);
@@ -131,7 +140,7 @@ export function pairStudents(studentPairs, teacherSocket: Socket) {
   }
 }
 
-function deleteChat(chatId: string, student1, student2) {
+function deleteChat(chatId: ChatId, student1: Student, student2: Student) {
   student1.socket.leave(chatId);
   student2.socket.leave(chatId);
 
@@ -144,7 +153,7 @@ function deleteChat(chatId: string, student1, student2) {
 
 export function unpairStudentChat(
   teacherSocket: Socket,
-  chatId: string,
+  chatId: ChatId,
   student1,
   student2,
 ) {
